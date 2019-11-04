@@ -148,7 +148,6 @@ public class UserBo {
 
     /**
      * 检查能否抽奖
-     * https://km.sankuai.com/page/207369636#id-4.1.%E7%94%A8%E6%88%B7%E7%82%B9%E5%87%BB%E6%8A%BD%E5%A5%96%E6%8C%89%E9%92%AE%E5%9C%BA%E6%99%AF
      */
     public LotteryAllowableBo checkLotteryAllowable() {
         if (userType == null) {
