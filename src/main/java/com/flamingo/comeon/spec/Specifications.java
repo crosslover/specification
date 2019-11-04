@@ -4,6 +4,8 @@ import com.flamingo.comeon.spec.util.AssertUtil;
 import com.flamingo.comeon.spec.util.CollectionUtil;
 
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Util for Specifications
@@ -58,7 +60,7 @@ public final class Specifications {
         if (specifications.length == 2) {
             return specifications[0].or(specifications[1]);
         }
-        return new CompositeSpecification<>(CollectionUtil.newArrayList(specifications), CompositeSpecification.Operator.OR);
+        return new CompositeSpecification<>(CollectionUtil.newArrayList(specifications), Operator.OR);
     }
 
     /**
@@ -87,6 +89,10 @@ public final class Specifications {
         return new GenericMessageSpecification<>(specification, success, fail);
     }
 
+    public static <M, T> MessageSpecification<M, T> ms(Specification<T> specification) {
+        return ms(specification, null, null);
+    }
+
     /**
      * {@link Specification}'s version for {@code and}
      *
@@ -95,14 +101,8 @@ public final class Specifications {
      * @param <T>
      * @return
      */
-    public static <M, T> MessageSpecification<M, T> and(MessageSpecification<M, T>... specifications) {
+    public static <M, T> MessageAccumulator<M, T> and(MessageSpecification<M, T>... specifications) {
         assertSpecifications(specifications);
-        if (specifications.length == 1) {
-            return specifications[0];
-        }
-        if (specifications.length == 2) {
-            return specifications[0].and(specifications[1]);
-        }
         return new CompositeMessageSpecification<>(CollectionUtil.newArrayList(specifications));
     }
 
@@ -114,15 +114,9 @@ public final class Specifications {
      * @param <T>
      * @return
      */
-    public static <M, T> MessageSpecification<M, T> or(MessageSpecification<M, T>... specifications) {
+    public static <M, T> MessageAccumulator<M, T> or(MessageSpecification<M, T>... specifications) {
         assertSpecifications(specifications);
-        if (specifications.length == 1) {
-            return specifications[0];
-        }
-        if (specifications.length == 2) {
-            return specifications[0].or(specifications[1]);
-        }
-        return new CompositeMessageSpecification<>(CollectionUtil.newArrayList(specifications));
+        return new CompositeMessageSpecification<>(CollectionUtil.newArrayList(specifications), Operator.OR);
     }
 
     /**
@@ -133,14 +127,36 @@ public final class Specifications {
      * @param <T>
      * @return
      */
-    public static <M, T> MessageSpecification<M, T> or(MessageSpecification<M, T> specification) {
+    public static <M, T> MessageSpecification<M, T> not(MessageSpecification<M, T> specification) {
         AssertUtil.notNull(specification, "specification cannot be null");
         return specification.not();
+    }
+
+    public static <M, T> MessageSpecification<M, T> msAnd(Specification<T>... specifications) {
+        assertSpecifications(specifications);
+        return and(upgradeToMessageSpecification(specifications));
+    }
+
+    public static <M, T> MessageSpecification<M, T> msOr(Specification<T>... specifications) {
+        assertSpecifications(specifications);
+        return or(upgradeToMessageSpecification(specifications));
     }
 
     public static <T> void assertSpecifications(Specification<T>[] specifications) {
         AssertUtil.notNull(specifications, "specifications cannot be null");
         AssertUtil.noNullElements(specifications, "specifications cannot have null element");
         AssertUtil.notEmpty(specifications, "specifications cannot be empty");
+    }
+
+    private static <M, T> MessageSpecification<M, T>[] upgradeToMessageSpecification(Specification<T>[] specifications) {
+        return Stream.of(specifications)
+                .map(s -> {
+                    if (s instanceof MessageSpecification) {
+                        return s;
+                    } else {
+                        return ms(s);
+                    }
+                })
+                .collect(Collectors.toList()).toArray(new MessageSpecification[0]);
     }
 }

@@ -39,13 +39,13 @@ public class GenericMessageSpecification<T, M> extends MessageSpecification<M, T
     }
 
     @Override
-    public MessageSpecification<M, T> and(MessageSpecification<M, T> other) {
+    public MessageAccumulator<M, T> and(MessageSpecification<M, T> other) {
         return new CompositeMessageSpecification(CollectionUtil.newArrayList(this, other));
     }
 
     @Override
-    public MessageSpecification<M, T> or(MessageSpecification<M, T> other) {
-        return new CompositeMessageSpecification(CollectionUtil.newArrayList(this, other), CompositeSpecification.Operator.OR);
+    public MessageAccumulator<M, T> or(MessageSpecification<M, T> other) {
+        return new CompositeMessageSpecification(CollectionUtil.newArrayList(this, other), Operator.OR);
     }
 
     @Override
